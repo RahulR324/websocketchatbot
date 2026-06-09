@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Knowledge Assistant</title>
+
+    @vite(['resources/js/app.js'])
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+    <style>
+        html,
+body{
+    width:100%;
+    height:100%;
+    overflow:hidden;
+}
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Inter',sans-serif;
+}
+
+body{
+    background:#FAFAFA;
+    overflow-x:hidden;
+}
+
+.chat-container{
+    width:100%;
+    max-width:1100px;
+    margin:auto;
+    height:100dvh;
+    display:flex;
+    flex-direction:column;
+}
+
+.header{
+    background:#fff;
+    border-bottom:1px solid #E5E7EB;
+    padding:18px 24px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-shrink:0;
+}
+
+.header-left{
+    display:flex;
+    align-items:center;
+    gap:12px;
+}
+
+.logo{
+    width:48px;
+    height:48px;
+    border-radius:14px;
+    background:#2563EB;
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:20px;
+    flex-shrink:0;
+}
+
+.bot-info h2{
+    font-size:18px;
+    color:#111827;
+    font-weight:600;
+}
+
+.status{
+    font-size:12px;
+    color:#16A34A;
+}
+
+#messages{
+    flex:1;
+    overflow-y:auto;
+    padding:24px;
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+    scroll-behavior:smooth;
+}
+
+.welcome{
+    text-align:center;
+    margin:auto;
+    max-width:650px;
+    padding:20px;
+}
+
+.welcome h1{
+    font-size:42px;
+    color:#111827;
+    margin-bottom:12px;
+    line-height:1.2;
+}
+
+.welcome p{
+    color:#6B7280;
+    font-size:18px;
+    line-height:1.6;
+}
+
+.message-row{
+    display:flex;
+    width:100%;
+}
+
+.user-row{
+    justify-content:flex-end;
+}
+
+.bot-row{
+    justify-content:flex-start;
+}
+
+.message{
+    max-width:70%;
+    padding:14px 18px;
+    border-radius:18px;
+    word-wrap:break-word;
+    overflow-wrap:break-word;
+    line-height:1.6;
+    animation:fadeIn .3s ease;
+}
+
+.user-message{
+    background:#2563EB;
+    color:#fff;
+    border-bottom-right-radius:6px;
+}
+
+.bot-message{
+    background:#fff;
+    color:#111827;
+    border:1px solid #E5E7EB;
+    border-bottom-left-radius:6px;
+    box-shadow:0 4px 15px rgba(0,0,0,.05);
+}
+
+.input-area{
+    background:#fff;
+    border-top:1px solid #E5E7EB;
+    padding:16px 20px;
+    flex-shrink:0;
+}
+
+.input-wrapper{
+    display:flex;
+    gap:10px;
+    width:100%;
+}
+
+#message{
+    flex:1;
+    min-height:52px;
+    padding:14px 20px;
+    border:1px solid #E5E7EB;
+    border-radius:30px;
+    outline:none;
+    font-size:16px;
+}
+
+#message:focus{
+    border-color:#2563EB;
+}
+
+.send-btn{
+    background:#2563EB;
+    color:white;
+    border:none;
+    border-radius:30px;
+    min-width:100px;
+    padding:0 24px;
+    cursor:pointer;
+    font-weight:600;
+    transition:.3s;
+}
+
+.send-btn:hover{
+    background:#1D4ED8;
+}
+
+.typing{
+    background:#fff;
+    border:1px solid #E5E7EB;
+    padding:14px 18px;
+    border-radius:18px;
+    width:70px;
+    box-shadow:0 4px 15px rgba(0,0,0,.05);
+}
+
+@keyframes fadeIn{
+    from{
+        opacity:0;
+        transform:translateY(10px);
+    }
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
+}
+
+/* Large Desktop */
+
+@media (min-width:1400px){
+
+    .chat-container{
+        max-width:1200px;
+    }
+
+    .message{
+        max-width:60%;
+    }
+}
+
+/* Laptop */
+
+@media (max-width:1024px){
+
+    .chat-container{
+        max-width:100%;
+    }
+
+    .message{
+        max-width:75%;
+    }
+}
+
+/* Tablet */
+
+@media (max-width:768px){
+
+    .header{
+        padding:14px 16px;
+    }
+
+    .logo{
+        width:42px;
+        height:42px;
+    }
+
+    .bot-info h2{
+        font-size:16px;
+    }
+
+    .welcome h1{
+        font-size:30px;
+    }
+
+    .welcome p{
+        font-size:15px;
+    }
+
+    #messages{
+        padding:16px;
+    }
+
+    .message{
+        max-width:85%;
+        font-size:15px;
+    }
+
+    .send-btn{
+        min-width:80px;
+    }
+}
+
+/* Mobile */
+
+@media (max-width:480px){
+
+    .header{
+        padding:12px;
+    }
+
+    .logo{
+        width:38px;
+        height:38px;
+        font-size:16px;
+    }
+
+    .status{
+        font-size:11px;
+    }
+
+    .welcome{
+        padding:10px;
+    }
+
+    .welcome h1{
+        font-size:24px;
+    }
+
+    .welcome p{
+        font-size:14px;
+    }
+
+    #messages{
+        padding:12px;
+    }
+
+    .message{
+        max-width:92%;
+        padding:12px 14px;
+        font-size:14px;
+    }
+
+    .input-area{
+        padding:12px;
+    }
+
+    #message{
+        min-height:48px;
+        font-size:16px;
+        padding:12px 16px;
+    }
+
+    .send-btn{
+        min-width:70px;
+        padding:0 16px;
+    }
+}
+    </style>
+</head>
+<body>
+
+<div class="chat-container">
+
+    <div class="header">
+        <div class="header-left">
+            <div class="logo">
+                <i class="fa-solid fa-robot"></i>
+            </div>
+
+            <div class="bot-info">
+                <h2>Knowledge Assistant</h2>
+            </div>
+        </div>
+    </div>
+
+    <div id="messages">
+
+        <div class="welcome" id="welcome">
+            <h1>Hello, how can I help you today?</h1>
+            <p>Ask questions and get instant answers from our knowledge base.</p>
+        </div>
+
+    </div>
+
+    <div class="input-area">
+        <div class="input-wrapper">
+
+            <input
+                type="text"
+                id="message"
+                placeholder="Ask a question..."
+                onkeypress="handleEnter(event)"
+            >
+
+            <button class="send-btn" onclick="sendMessage()">
+                Send <i class="fa-solid fa-paper-plane"></i>
+            </button>
+
+        </div>
+    </div>
+
+</div>
+
+<script>
+
+document.addEventListener('DOMContentLoaded', () => {
+
+    const messages = document.getElementById('messages');
+
+    console.log('Echo Object:', window.Echo);
+
+    if (window.Echo) {
+
+        window.Echo.channel('chat-channel')
+        .listen('MessageSent', (e) => {
+
+            console.log('Received:', e);
+
+            document.getElementById('typingRow')?.remove();
+
+            messages.innerHTML += `
+                <div class="message-row bot-row">
+                    <div class="message bot-message">
+                        ${e.message}
+                    </div>
+                </div>
+            `;
+
+            messages.scrollTop = messages.scrollHeight;
+        });
+
+    } else {
+        console.error('Echo not loaded');
+    }
+
+    window.handleEnter = function(event)
+    {
+        if(event.key === 'Enter')
+        {
+            sendMessage();
+        }
+    }
+
+    window.sendMessage = function()
+    {
+        let msg = document.getElementById('message').value.trim();
+
+        if(msg === '')
+        {
+            return;
+        }
+
+        document.getElementById('welcome')?.remove();
+
+        messages.innerHTML += `
+            <div class="message-row user-row">
+                <div class="message user-message">
+                    ${msg}
+                </div>
+            </div>
+        `;
+
+        document.getElementById('message').value = '';
+
+        messages.innerHTML += `
+            <div class="message-row bot-row" id="typingRow">
+                <div class="typing">
+                    <i class="fa-solid fa-ellipsis"></i>
+                </div>
+            </div>
+        `;
+
+        messages.scrollTop = messages.scrollHeight;
+
+        fetch('/send-message', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({
+                message: msg
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Message Sent');
+        })
+        .catch(error => {
+
+            document.getElementById('typingRow')?.remove();
+
+            messages.innerHTML += `
+                <div class="message-row bot-row">
+                    <div class="message bot-message">
+                        Connection Error
+                    </div>
+                </div>
+            `;
+
+            console.error(error);
+        });
+    }
+
+});
+
+</script>
+</body>
+</html>
