@@ -381,30 +381,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const messages = document.getElementById('messages');
 
-    console.log('Echo Object:', window.Echo);
+    let currentBotMessage = null;
 
     if (window.Echo) {
 
         window.Echo.channel('chat-channel')
-        .listen('MessageSent', (e) => {
-
-            console.log('Received:', e);
+        .listen('.StreamChunk', (e) => {
 
             document.getElementById('typingRow')?.remove();
 
-            messages.innerHTML += `
-                <div class="message-row bot-row">
-                    <div class="message bot-message">
-                        ${e.message}
-                    </div>
-                </div>
-            `;
+            if (!currentBotMessage) {
 
+                const row = document.createElement('div');
+                row.className = 'message-row bot-row';
+
+                const bubble = document.createElement('div');
+                bubble.className = 'message bot-message';
+
+                row.appendChild(bubble);
+
+                messages.appendChild(row);
+
+                currentBotMessage = bubble;
+            }
+
+            if (!e.finished) {
+
+                currentBotMessage.textContent += e.chunk + ' ';
+
+            } else {
+
+                currentBotMessage = null;
+
+            }
             messages.scrollTop = messages.scrollHeight;
         });
 
     } else {
+
         console.error('Echo not loaded');
+
     }
 
     window.handleEnter = function(event)
@@ -417,61 +433,82 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.sendMessage = function()
     {
-        let msg = document.getElementById('message').value.trim();
+        let msg = document
+            .getElementById('message')
+            .value
+            .trim();
 
         if(msg === '')
         {
             return;
         }
 
+        currentBotMessage = null;
+
         document.getElementById('welcome')?.remove();
 
-        messages.innerHTML += `
-            <div class="message-row user-row">
-                <div class="message user-message">
-                    ${msg}
-                </div>
-            </div>
-        `;
+        const userRow = document.createElement('div');
+        userRow.className = 'message-row user-row';
+
+        const userBubble = document.createElement('div');
+        userBubble.className = 'message user-message';
+        userBubble.textContent = msg;
+
+        userRow.appendChild(userBubble);
+
+        messages.appendChild(userRow);
 
         document.getElementById('message').value = '';
 
-        messages.innerHTML += `
-            <div class="message-row bot-row" id="typingRow">
-                <div class="typing">
-                    <i class="fa-solid fa-ellipsis"></i>
-                </div>
+        const typingRow = document.createElement('div');
+        typingRow.className = 'message-row bot-row';
+        typingRow.id = 'typingRow';
+
+        typingRow.innerHTML = `
+            <div class="typing">
+                <i class="fa-solid fa-ellipsis"></i>
             </div>
         `;
+
+        messages.appendChild(typingRow);
 
         messages.scrollTop = messages.scrollHeight;
 
         fetch('/send-message', {
+
             method: 'POST',
+
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
             },
+
             body: JSON.stringify({
                 message: msg
             })
+
         })
         .then(response => response.json())
         .then(data => {
-            console.log('Message Sent');
+
+            console.log('Streaming Started');
+
         })
         .catch(error => {
 
             document.getElementById('typingRow')?.remove();
 
-            messages.innerHTML += `
-                <div class="message-row bot-row">
-                    <div class="message bot-message">
-                        Connection Error
-                    </div>
+            const errorRow = document.createElement('div');
+            errorRow.className = 'message-row bot-row';
+
+            errorRow.innerHTML = `
+                <div class="message bot-message">
+                    Connection Error
                 </div>
             `;
+
+            messages.appendChild(errorRow);
 
             console.error(error);
         });
