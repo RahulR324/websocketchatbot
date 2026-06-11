@@ -9,7 +9,7 @@
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
-
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         html,
 body{
@@ -380,7 +380,7 @@ body{
 document.addEventListener('DOMContentLoaded', () => {
 
     const messages = document.getElementById('messages');
-
+    let currentBotText = '';
     let currentBotMessage = null;
 
     if (window.Echo) {
@@ -406,12 +406,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             if (!e.finished) {
-
-                currentBotMessage.textContent += e.chunk + ' ';
+                currentBotText += e.chunk + ' ';
+                currentBotMessage.innerHTML = marked.parse(currentBotText);
 
             } else {
 
                 currentBotMessage = null;
+                currentBotText = '';
 
             }
             messages.scrollTop = messages.scrollHeight;
@@ -444,7 +445,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         currentBotMessage = null;
-
+        currentBotText = '';
         document.getElementById('welcome')?.remove();
 
         const userRow = document.createElement('div');
@@ -472,7 +473,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         messages.appendChild(typingRow);
 
-        messages.scrollTop = messages.scrollHeight;
+        messages.scrollTo({
+            top: messages.scrollHeight,
+            behavior: 'smooth'
+        });
 
         fetch('/send-message', {
 

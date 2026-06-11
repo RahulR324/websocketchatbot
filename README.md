@@ -1,68 +1,106 @@
-# Realtime JSON Chatbot using Laravel WebSockets
+# Realtime AI Chatbot using Laravel, Gemini AI & WebSockets
 
-A modern realtime chatbot built with Laravel, Laravel Reverb, WebSockets, and a JSON-based knowledge base. The chatbot provides instant responses from a structured JSON file without requiring a database.
+A modern AI-powered realtime chatbot built with Laravel, Laravel Reverb, WebSockets, and Google's Gemini AI. The application delivers AI-generated responses with realtime streaming, providing a smooth and interactive chat experience similar to modern AI assistants.
 
 ---
 
 # Features
 
-* Realtime communication using Laravel Reverb and WebSockets
-* JSON-based question and answer system
-* No database required
-* Modern responsive chat interface
-* User messages aligned to the right
-* Bot responses aligned to the left
+* AI-powered responses using Google Gemini
+* Realtime message delivery with Laravel Reverb
+* WebSocket-based communication
+* Live response streaming (word-by-word output)
+* Teacher-style AI explanations
+* Modern SaaS-inspired chat interface
 * Typing indicator animation
-* Mobile, tablet, and desktop responsive design
+* Responsive design for desktop, tablet, and mobile
+* Clean and minimal user experience
 * Fast and lightweight architecture
+* No page refresh required
+* Laravel Echo integration for realtime updates
 
 ---
 
 # Technology Stack
 
+### Backend
+
 * Laravel 12
 * Laravel Reverb
+* Laravel Events & Broadcasting
+* Laravel HTTP Client
+* Google Gemini API
+
+### Frontend
+
+* Laravel Blade
+* JavaScript (ES6)
 * Laravel Echo
 * Pusher JS
 * Vite
 * HTML5
 * CSS3
-* JavaScript
-* JSON Knowledge Base
+* Font Awesome
 
 ---
 
 # How It Works
 
-1. User sends a message.
-2. Laravel receives the request.
-3. The question is searched in `chatbot.json`.
-4. Matching answer is found.
-5. Laravel broadcasts the response using Reverb.
-6. Laravel Echo receives the message instantly.
-7. Bot response appears in realtime.
+1. User enters a question.
+2. Laravel sends the question to Gemini AI.
+3. Gemini generates an intelligent response.
+4. The response is split into chunks.
+5. Each chunk is broadcast through Laravel Reverb.
+6. Laravel Echo receives the chunks instantly.
+7. The chatbot displays the response progressively in realtime.
+8. The final answer appears naturally, similar to modern AI assistants.
+
+---
+
+# Realtime Streaming
+
+The chatbot supports realtime streaming responses using:
+
+* Laravel Events
+* Laravel Reverb
+* WebSockets
+* Laravel Echo
+
+Instead of waiting for the complete response, users can see the answer appear progressively as it is generated.
 
 ---
 
 # Responsive Design
 
-The chatbot is fully optimized for:
+Optimized for:
 
 * Desktop
 * Laptop
 * Tablet
 * Mobile Devices
 
+The interface automatically adapts to different screen sizes while maintaining a clean and professional appearance.
+
+---
+
+# AI Teaching Mode
+
+The chatbot is configured to act as an educational assistant.
+
+Capabilities include:
+
+* Beginner-friendly explanations
+* Step-by-step concept breakdowns
+* Examples and use cases
+* Structured answers
+* Easy-to-understand language
+
 ---
 
 # Author
 
-Rahul R
+**Rahul R**
 
-Software Engineer Trainee | Full Stack Developer
+Software Engineer Trainee
+Full Stack Developer
 
----
-
-# License
-
-This project is licensed under the MIT License.
