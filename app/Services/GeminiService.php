@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
-
+use Illuminate\Support\Facades\Log;
 class GeminiService
 {
     public function ask($question)
@@ -47,6 +47,12 @@ class GeminiService
         );
         if (!$response->successful()) {
 
+            Log::error('Gemini API Error', [
+                'status' => $response->status(),
+                'headers' => $response->headers(),
+                'body' => $response->body()
+            ]);
+
             return match ($response->status()) {
 
                 400 => 'Invalid request sent to AI service.',
@@ -57,7 +63,7 @@ class GeminiService
 
                 404 => 'Requested AI model not found.',
 
-                429 => 'Daily API limit reached. Please try again later.',
+                429 => 'The AI service has reached its usage limit. Please try again later.',
 
                 500 => 'Gemini server error. Please try again later.',
 
@@ -72,7 +78,10 @@ class GeminiService
         }
 
         $data = $response->json();
-        dd($response->status(), $response->json());
+        Log::info('Gemini Response',[
+            'status'=> $response->status(),
+            'body' => $response->json()
+        ]);
         return $data['candidates'][0]['content']['parts'][0]['text']
            ?? 'Unable to generate response.';
     }

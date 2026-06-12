@@ -513,8 +513,6 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
 
             messages.appendChild(errorRow);
-
-            console.error(error);
         });
     }
 
