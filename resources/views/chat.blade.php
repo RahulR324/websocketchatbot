@@ -209,6 +209,25 @@ body{
     }
 }
 
+.quiz-option{
+    width: 100%;
+    margin-top: 10px;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.correct{
+    background: #28a745 !important;
+    color: white !important;
+}
+
+.wrong{
+    background: #dc3545 !important;
+    color: white !important;
+}
+
 /* Large Desktop */
 
 @media (min-width:1400px){
@@ -382,6 +401,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const messages = document.getElementById('messages');
     let currentBotText = '';
     let currentBotMessage = null;
+    let quizData = [];
+    let currentQuestion = 0;
+    let score = 0;
 
     if (window.Echo) {
 
@@ -495,6 +517,15 @@ document.addEventListener('DOMContentLoaded', () => {
         })
         .then(response => response.json())
         .then(data => {
+            if(data.type === 'quiz'){
+                quizData = data.quiz;
+                currentQuestion = 0;
+                score = 0;
+
+                document.getElementById('typingRow')?.remove();
+                showQuestion();
+                return;
+            }
 
             console.log('Streaming Started');
 
@@ -515,6 +546,102 @@ document.addEventListener('DOMContentLoaded', () => {
             messages.appendChild(errorRow);
         });
     }
+
+    function showQuestion(){
+        console.log('show question called');
+        const q = quizData[currentQuestion];
+        const row = document.createElement('div');
+        row.className = 'message-row bot-row';
+        row.innerHTML = `
+            <div class="message bot-message">
+
+                <h4>
+                    Question ${currentQuestion + 1}
+                    of
+                    ${quizData.length}
+                </h4>
+
+                <p>${q.question}</p>
+
+                ${q.options.map(option => `
+                <button
+                    class="quiz-option"
+                    onclick="checkAnswer(this,'${option}')"
+                >
+                    ${option}
+                </button>
+                `).join('')}
+
+            </div>
+        `;
+
+        messages.appendChild(row);
+        messages.scrollTop = messages.scrollHeight;
+    }
+
+    window.checkAnswer = function(button, selected)
+    {
+        const q = quizData[currentQuestion];
+
+        const buttons = button.parentElement.querySelectorAll('.quiz-option');
+
+        buttons.forEach(btn => {
+
+            btn.disabled = true;
+
+            if (btn.innerText.trim() === q.answer.trim()) {
+                btn.classList.add('correct');
+            }
+
+            if (
+                btn.innerText.trim() === selected.trim() &&
+                selected.trim() !== q.answer.trim()
+            ) {
+                btn.classList.add('wrong');
+            }
+
+        });
+
+        if (selected.trim() === q.answer.trim()) {
+            score++;
+        }
+
+        setTimeout(() => {
+
+            currentQuestion++;
+
+            if (currentQuestion < quizData.length) {
+                showQuestion();
+            } else {
+                showQuizResult();
+            }
+
+        }, 1000);
+    }
+
+    function showQuizResult(){
+        const row = document.createElement('div');
+        row.className = 'message-row bot-row';
+
+        row.innerHTML = `
+        <div class="message bot-message">
+
+            <h3>
+                Quiz Completed
+            </h3>
+
+            <p>
+                Score:
+                ${score}/${quizData.length}
+            </p>
+
+        </div>
+        `;
+
+        messages.appendChild(row);
+
+    }
+
 
 });
 

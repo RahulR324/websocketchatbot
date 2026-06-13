@@ -19,7 +19,20 @@ class ChatController extends Controller
 
     public function send(Request $request)
     {
-        $question = trim($request->message ?? '');   
+        $question = trim($request->message ?? '');
+ 
+        $isQuiz = preg_match(
+            '/\b(quiz|practice|mcq|test me| mock test| exam)\b/i',$question
+        ); 
+        
+        if ($isQuiz) {
+            $quiz = $this->gemini->generateQuiz($question);
+
+            return response()->json([
+                'type' => 'quiz',
+                'quiz' => $quiz
+            ]);
+        }    
         $answer = $this->gemini->ask($question);
         $words = explode(' ', $answer);
         foreach ($words as $word) {
