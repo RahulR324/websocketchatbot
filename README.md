@@ -30,6 +30,7 @@ A modern AI-powered realtime chatbot built with Laravel, Laravel Reverb, WebSock
 * Laravel Events & Broadcasting
 * Laravel HTTP Client
 * Google Gemini API
+* groq API
 
 ### Frontend
 
