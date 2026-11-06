@@ -146,6 +146,76 @@ body{
     box-shadow:0 4px 15px rgba(0,0,0,.05);
 }
 
+.bot-message p {
+    margin-bottom: 0.75rem;
+}
+
+.bot-message p:last-child {
+    margin-bottom: 0;
+}
+
+.bot-message h1,
+.bot-message h2,
+.bot-message h3,
+.bot-message h4 {
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.bot-message h1:first-child,
+.bot-message h2:first-child,
+.bot-message h3:first-child {
+    margin-top: 0;
+}
+
+.bot-message ul,
+.bot-message ol {
+    margin-left: 1.25rem;
+    margin-bottom: 0.75rem;
+}
+
+.bot-message li {
+    margin-bottom: 0.25rem;
+}
+
+.bot-message pre {
+    background: #1f2937;
+    color: #f9fafb;
+    padding: 12px;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 0.5rem 0;
+}
+
+.bot-message code {
+    background: #f3f4f6;
+    color: #1f2937;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 0.9em;
+}
+
+.bot-message pre code {
+    background: transparent;
+    color: inherit;
+    padding: 0;
+}
+
+.bot-message blockquote {
+    border-left: 3px solid #d1d5db;
+    padding-left: 10px;
+    color: #4b5563;
+    margin: 0.5rem 0;
+}
+
+.bot-error-message {
+    color: #dc2626 !important;
+    background: #fef2f2 !important;
+    border-color: #fecaca !important;
+}
+
 .input-area{
     background:#fff;
     border-top:1px solid #E5E7EB;
@@ -399,52 +469,71 @@ body{
 document.addEventListener('DOMContentLoaded', () => {
 
     const messages = document.getElementById('messages');
-    let currentBotText = '';
-    let currentBotMessage = null;
+    const messageInput = document.getElementById('message');
+    const sendButton = document.querySelector('.send-btn');
     let quizData = [];
     let currentQuestion = 0;
     let score = 0;
 
-    if (window.Echo) {
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = String(text);
+        return div.innerHTML;
+    }
+
+    function renderBotAnswer(answer) {
+        document.getElementById('typingRow')?.remove();
+        const row = document.createElement('div');
+        row.className = 'message-row bot-row';
+        const bubble = document.createElement('div');
+        bubble.className = 'message bot-message';
+        row.appendChild(bubble);
+        messages.appendChild(row);
+
+        const text = String(answer || '');
+        const tokens = text.match(/\S+\s*/g) || [text];
+        let i = 0;
+        let shown = '';
+        const step = 2;
+        const delay = 18;
+
+        const tick = () => {
+            if (i >= tokens.length) {
+                bubble.innerHTML = marked.parse(text);
+                messages.scrollTop = messages.scrollHeight;
+                return;
+            }
+            shown += tokens.slice(i, i + step).join('');
+            i += step;
+            bubble.innerHTML = marked.parse(shown);
+            messages.scrollTop = messages.scrollHeight;
+            setTimeout(tick, delay);
+        };
+        tick();
+    }
+
+    function setupEchoListener() {
+        if (!window.Echo) {
+            return;
+        }
+
+        try {
+            window.Echo.leave('chat-channel');
+        } catch (e) {}
 
         window.Echo.channel('chat-channel')
-        .listen('.StreamChunk', (e) => {
-
-            document.getElementById('typingRow')?.remove();
-
-            if (!currentBotMessage) {
-
-                const row = document.createElement('div');
-                row.className = 'message-row bot-row';
-
-                const bubble = document.createElement('div');
-                bubble.className = 'message bot-message';
-
-                row.appendChild(bubble);
-
-                messages.appendChild(row);
-
-                currentBotMessage = bubble;
-            }
-
-            if (!e.finished) {
-                currentBotText += e.chunk + ' ';
-                currentBotMessage.innerHTML = marked.parse(currentBotText);
-
-            } else {
-
-                currentBotMessage = null;
-                currentBotText = '';
-
-            }
-            messages.scrollTop = messages.scrollHeight;
-        });
-
-    } else {
-
-        console.error('Echo not loaded');
-
+            .listen('.StreamChunk', (e) => {
+                if (e && e.finished && e.chunk) {
+                    renderBotAnswer(e.chunk);
+                }
+            });
     }
+
+    setupEchoListener();
+    window.addEventListener('echo:ready', () => {
+        setupEchoListener();
+    });
 
     window.handleEnter = function(event)
     {
@@ -452,22 +541,17 @@ document.addEventListener('DOMContentLoaded', () => {
         {
             sendMessage();
         }
-    }
+    };
 
     window.sendMessage = function()
     {
-        let msg = document
-            .getElementById('message')
-            .value
-            .trim();
+        let msg = messageInput.value.trim();
 
-        if(msg === '')
+        if (msg === '')
         {
             return;
         }
 
-        currentBotMessage = null;
-        currentBotText = '';
         document.getElementById('welcome')?.remove();
 
         const userRow = document.createElement('div');
@@ -478,11 +562,13 @@ document.addEventListener('DOMContentLoaded', () => {
         userBubble.textContent = msg;
 
         userRow.appendChild(userBubble);
-
         messages.appendChild(userRow);
 
-        document.getElementById('message').value = '';
+        messageInput.value = '';
+        messageInput.disabled = true;
+        if (sendButton) sendButton.disabled = true;
 
+        document.getElementById('typingRow')?.remove();
         const typingRow = document.createElement('div');
         typingRow.className = 'message-row bot-row';
         typingRow.id = 'typingRow';
@@ -501,24 +587,45 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         fetch('/send-message', {
-
             method: 'POST',
-
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
             },
-
             body: JSON.stringify({
                 message: msg
             })
-
         })
-        .then(response => response.json())
-        .then(data => {
-            if(data.type === 'quiz'){
-                quizData = data.quiz;
+        .then(async (response) => {
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                const errorMsg = data.message || data.error || ('Request failed with status ' + response.status);
+                throw new Error(errorMsg);
+            }
+            return data;
+        })
+        .then((data) => {
+            messageInput.disabled = false;
+            if (sendButton) sendButton.disabled = false;
+            messageInput.focus();
+
+            if (data.error) {
+                document.getElementById('typingRow')?.remove();
+                const errorRow = document.createElement('div');
+                errorRow.className = 'message-row bot-row';
+                errorRow.innerHTML = `
+                    <div class="message bot-message bot-error-message">
+                        ${escapeHtml(data.error)}
+                    </div>
+                `;
+                messages.appendChild(errorRow);
+                messages.scrollTop = messages.scrollHeight;
+                return;
+            }
+
+            if (data.type === 'quiz') {
+                quizData = Array.isArray(data.quiz) ? data.quiz : [];
                 currentQuestion = 0;
                 score = 0;
 
@@ -527,51 +634,55 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            console.log('Streaming Started');
+            if (data.answer) {
+                renderBotAnswer(data.answer);
+                return;
+            }
 
+            console.log('Streaming Started');
         })
-        .catch(error => {
+        .catch((error) => {
+            messageInput.disabled = false;
+            if (sendButton) sendButton.disabled = false;
+            messageInput.focus();
 
             document.getElementById('typingRow')?.remove();
 
             const errorRow = document.createElement('div');
             errorRow.className = 'message-row bot-row';
-
             errorRow.innerHTML = `
-                <div class="message bot-message">
-                    Connection Error
+                <div class="message bot-message bot-error-message">
+                    ${escapeHtml(error.message || 'Connection Error')}
                 </div>
             `;
 
             messages.appendChild(errorRow);
+            messages.scrollTop = messages.scrollHeight;
         });
-    }
+    };
 
-    function showQuestion(){
-        console.log('show question called');
+    function showQuestion() {
+        if (!quizData || !quizData[currentQuestion]) return;
         const q = quizData[currentQuestion];
         const row = document.createElement('div');
         row.className = 'message-row bot-row';
+
+        const optionsHtml = (q.options || []).map((option, idx) => `
+            <button
+                class="quiz-option"
+                onclick="checkAnswer(this, ${idx})"
+            >
+                ${escapeHtml(option)}
+            </button>
+        `).join('');
+
         row.innerHTML = `
             <div class="message bot-message">
-
                 <h4>
-                    Question ${currentQuestion + 1}
-                    of
-                    ${quizData.length}
+                    Question ${currentQuestion + 1} of ${quizData.length}
                 </h4>
-
-                <p>${q.question}</p>
-
-                ${q.options.map(option => `
-                <button
-                    class="quiz-option"
-                    onclick="checkAnswer(this,'${option}')"
-                >
-                    ${option}
-                </button>
-                `).join('')}
-
+                <p>${escapeHtml(q.question)}</p>
+                ${optionsHtml}
             </div>
         `;
 
@@ -579,70 +690,57 @@ document.addEventListener('DOMContentLoaded', () => {
         messages.scrollTop = messages.scrollHeight;
     }
 
-    window.checkAnswer = function(button, selected)
-    {
+    window.checkAnswer = function(button, selectedIdx) {
         const q = quizData[currentQuestion];
+        if (!q) return;
+
+        const selected = (q.options && q.options[selectedIdx] !== undefined)
+            ? String(q.options[selectedIdx]).trim()
+            : '';
+        const correctAnswer = String(q.answer || '').trim();
 
         const buttons = button.parentElement.querySelectorAll('.quiz-option');
 
         buttons.forEach(btn => {
-
             btn.disabled = true;
 
-            if (btn.innerText.trim() === q.answer.trim()) {
+            if (btn.innerText.trim() === correctAnswer) {
                 btn.classList.add('correct');
             }
 
-            if (
-                btn.innerText.trim() === selected.trim() &&
-                selected.trim() !== q.answer.trim()
-            ) {
+            if (btn === button && selected !== correctAnswer) {
                 btn.classList.add('wrong');
             }
-
         });
 
-        if (selected.trim() === q.answer.trim()) {
+        if (selected === correctAnswer) {
             score++;
         }
 
         setTimeout(() => {
-
             currentQuestion++;
-
             if (currentQuestion < quizData.length) {
                 showQuestion();
             } else {
                 showQuizResult();
             }
-
         }, 1000);
-    }
+    };
 
-    function showQuizResult(){
+    function showQuizResult() {
         const row = document.createElement('div');
         row.className = 'message-row bot-row';
 
         row.innerHTML = `
-        <div class="message bot-message">
-
-            <h3>
-                Quiz Completed
-            </h3>
-
-            <p>
-                Score:
-                ${score}/${quizData.length}
-            </p>
-
-        </div>
+            <div class="message bot-message">
+                <h3>Quiz Completed</h3>
+                <p>Score: ${score}/${quizData.length}</p>
+            </div>
         `;
 
         messages.appendChild(row);
-
+        messages.scrollTop = messages.scrollHeight;
     }
-
-
 });
 
 </script>
